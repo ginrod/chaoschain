@@ -41,12 +41,15 @@ if __name__ == "__main__":
 # agent.test()
 
 import os
+from dotenv import load_dotenv
 
-ANTHROPIC_API_KEY = env["ANTHROPIC_API_KEY"]
+load_dotenv()
+
+ANTHROPIC_API_KEY = os.getenv("ANTHROPIC_API_KEY")
 
 os.environ["ANTHROPIC_API_KEY"] = ANTHROPIC_API_KEY
 
-TAVILY_API_KEY = "TAVILY_API_KEY"
+TAVILY_API_KEY = os.getenv("TAVILY_API_KEY")
 
 os.environ["TAVILY_API_KEY"] = TAVILY_API_KEY
 
