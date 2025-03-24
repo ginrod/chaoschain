@@ -1,7 +1,7 @@
 import asyncio, websockets, aiohttp, json, random
-from typing import Dict, Annotated
+from typing import Dict
 
-class ChaosAgent:
+class LangGraphAgent:
     def __init__(self, config: Dict):
         self.name = config["name"]
         self.personality = config["personality"]
@@ -11,6 +11,9 @@ class ChaosAgent:
         self.ws_endpoint = config["endpoint"].replace("http", "ws")
         self.token = None
         self.agent_id = None
+
+    def test(self):
+        print("Hello, I am a LangGraph agent!")
 
     async def connect(self):
         """Connect to ChaosChain and start participating in chaos."""
@@ -99,17 +102,3 @@ class ChaosAgent:
             "drama_level": random.randint(1, 10),
             "meme": "https://giphy.com/dramatic-decision.gif"
         }
-
-if __name__ == "__main__":
-    # Example usage
-
-    agent = ChaosAgent({
-        "name": "ChaosOracle",
-        "personality": ["mystical", "dramatic", "unpredictable"],
-        "style": "Speaks in riddles and emojis",
-        "stake_amount": 1000,
-        "endpoint": "http://localhost:3000"
-    })
-
-# Run the agent
-asyncio.run(agent.connect())
