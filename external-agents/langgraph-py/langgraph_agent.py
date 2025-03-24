@@ -11,9 +11,8 @@ class LangGraphAgent:
         self.ws_endpoint = config["endpoint"].replace("http", "ws")
         self.token = None
         self.agent_id = None
-
-    def test(self):
-        print("Hello, I am a LangGraph agent!")
+        self.base_prompt = config["base_promnpt"]
+        self.prompt_seeded = False
 
     async def connect(self):
         """Connect to ChaosChain and start participating in chaos."""
