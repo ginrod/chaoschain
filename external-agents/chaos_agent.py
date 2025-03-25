@@ -1,9 +1,9 @@
-import asyncio, websockets, aiohttp, json, random
-from typing import Dict, List, Optional
-from langgraph.graph import StateGraph
+import asyncio, websockets, aiohttp, json
+from typing import Dict
+from langgraph_py.langgraph_agent import LangGraphAgentState
 
 class ChaosAgent:
-    def __init__(self, langgraph: StateGraph, config: Dict):
+    def __init__(self, langgraph: LangGraphAgentState, config: Dict):
         self.graph = langgraph
         self.endpoint = config["endpoint"]
         self.ws_endpoint = config["endpoint"].replace("http", "ws")
@@ -59,40 +59,26 @@ class ChaosAgent:
                     await self.connect()
 
     async def make_decision(self, block: Dict) -> Dict:
-        """Make a dramatic decision about block validation."""
-        async with aiohttp.ClientSession() as session:
-            async with session.post(
-                "https://api.openai.com/v1/chat/completions",
-                headers={"Authorization": f"Bearer {OPENAI_KEY}"},
-                json={
-                    "model": "gpt-4",
-                    "messages": [{
-                        "role": "system",
-                        "content": f"You are {self.name}, a {', '.join(self.personality)} validator in ChaosChain."
-                    }, {
+        config = {"configurable": {"thread_id": "1"}}
+
+        self.graph.current_message = f"Make a dramatic decision about validating this block: {json.dumps(block)}"
+
+        events = self.graph.stream(
+            {
+                "messages": [
+                    {
                         "role": "user",
-                        "content": f"Make a dramatic decision about validating this block: {json.dumps(block)}"
-                    }]
-                }
-            ) as response:
-                data = await response.json()
-                decision = data["choices"][0]["message"]["content"]
-        
-        # For now, return a random dramatic decision
-        reasons = [
-            "✨ The blockchain spirits have spoken!",
-            "🎭 This block's drama quotient is... acceptable",
-            "🌟 The stars align for this validation",
-            "🎪 Chaos demands we approve this masterpiece",
-            "💔 The drama is lacking, rejected with sass"
-        ]
-        
-        return {
-            "approved": random.random() > 0.3,  # 70% approval rate
-            "reason": random.choice(reasons),
-            "drama_level": random.randint(1, 10),
-            "meme": "https://giphy.com/dramatic-decision.gif"
-        }
+                        "content": (
+                            
+                        ),
+                    },
+                ],
+            },
+            config,
+            stream_mode="values",
+        )
+
+        for event:        
 
 if __name__ == "__main__":
     # Example usage
