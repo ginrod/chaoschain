@@ -1,10 +1,10 @@
-from langgraph_agent import LangGraphAgent
-from langchain_anthropic import ChatAnthropic
+import asyncio, websockets, aiohttp, json, random
 from langchain_community.tools.tavily_search import TavilySearchResults
-from langchain_core.messages import BaseMessage
-from typing_extensions import TypedDict
+from langchain_anthropic import ChatAnthropic
+from langgraph_agent import LangGraphAgentState
+from langgraph.graph import StateGraph
 
-from langgraph.graph import StateGraph, START, END
+from config import AgentConfig, load_config
 
 if __name__ == "__main__":
 
@@ -26,7 +26,7 @@ if __name__ == "__main__":
 
         Your decision and reasoning is briefly and clearly"""
 
-    luffy = LangGraphAgent({
+    luffy = LangGraphAgentState({
         "name": "Monkey D. Luffy",
         "personality": ["adventurous", "fearless", "loyal", "simple-minded", "optimistic"],
         "style": ["informal", "energetic", "direct", "humorous"],
@@ -53,4 +53,45 @@ TAVILY_API_KEY = os.getenv("TAVILY_API_KEY")
 
 os.environ["TAVILY_API_KEY"] = TAVILY_API_KEY
 
-graph_builder = StateGraph(LangGraphAgent)
+def process_message(state: AgentState) -> AgentState:
+    # Load and validate configuration
+    config_obj = load_config()
+    
+    # Initialize OpenAI chat model with tracing
+    chat = ChatOpenAI(
+        model=config_obj.model_name,
+        temperature=config_obj.temperature,
+        callback_manager=callback_manager,
+        metadata={"agent_type": "chat"}
+    )
+    
+    # Create a message from the current input
+    messages = [HumanMessage(content=state["current_message"])]
+    
+    # Get response from OpenAI
+    ai_message = chat.invoke(messages)
+    
+    # Add both messages to the history
+    state["messages"].append(state["current_message"])
+    state["messages"].append(ai_message.content)
+    
+    return state
+
+
+tool = TavilySearchResults(max_results=2)
+tools = [tool]
+llm = ChatAnthropic(model="claude-3-5-sonnet-20240620")
+llm_with_tools = llm.bind_tools(tools)
+
+def create_graph() -> StateGraph:
+    workflow = StateGraph()
+
+    workflow.add_node("make_decision", process_message)
+
+    workflow.set_entry_point("make_decision")
+    workflow.set_finish_point("make_decision")
+
+    return workflow.compile()
+
+# Create the graph
+graph = create_graph()
