@@ -190,6 +190,11 @@ async def main():
 
     await chaos_agent.make_decision(block)
 
+    snapshot = graph.get_state(base_config)
+
+    with open("./output.json", "w") as output_file:
+        json.dump(snapshot, output_file, indent=4)
+
     # Run the agent
     # asyncio.run(chaos_agent.connect())
     # chaos_agent.test()
