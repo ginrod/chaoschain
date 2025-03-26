@@ -29,7 +29,9 @@ TAVILY_API_KEY = os.getenv("TAVILY_API_KEY")
 os.environ["TAVILY_API_KEY"] = TAVILY_API_KEY
 
 def process(state: AgentState, config) -> AgentState:
-    ai_message = llm_with_tools.invoke(state["prompts"])
+    state["prompts"].append(state["current_prompt"])
+
+    ai_message = llm.invoke(state["prompts"])
 
     config_params = config.get("configurable", {})
 
@@ -45,7 +47,7 @@ def process(state: AgentState, config) -> AgentState:
 tool = TavilySearchResults(max_results=2)
 tools = [tool]
 llm = ChatAnthropic(model="claude-3-5-sonnet-20240620")
-llm_with_tools = llm.bind_tools(tools)
+llm = llm.bind_tools(tools)
 
 tool_node = ToolNode(tools=tools)
 memory = MemorySaver()
@@ -100,7 +102,8 @@ async def main():
     # Luffy agent initial state
     initial_state = {
         **agent_luffy_config,
-        "prompts": [base_prompt],
+        "current_prompt": base_prompt,
+        "prompts": [],
         "feed_responses": [],
     }
 
@@ -118,13 +121,11 @@ async def main():
         "prompt_type": "feed" 
     })
 
-    # graph.invoke({ 
-    #     "messages":
-    #         [{ "role": "user", "content": base_prompt }]},
-    #     config={
-    #         **base_config, 
-    #         "prompt_type": "feed"
-    #     })
+    # # Testing agent memory
+    # graph.invoke({ "current_prompt": "What manga/anime character are you?" }, config={
+    #     **base_config,
+    #     "prompt_type": "feed" 
+    # })
 
     chaos_agent_config = {
         "endpoint": "http://localhost:3000",
