@@ -25,10 +25,10 @@ TAVILY_API_KEY = os.getenv("TAVILY_API_KEY")
 
 os.environ["TAVILY_API_KEY"] = TAVILY_API_KEY
 
-def human_assistance(query: str) -> str:
-    """Request assistance from a human."""
-    human_response = interrupt({"query": query})
-    return human_response["data"]
+def human_assistance(state: LangGraphAgentState) -> LangGraphAgentState:
+    ai_message = llm_with_tools.invoke(state.messages)
+
+    return state
 
 def make_decision(state: LangGraphAgentState) -> LangGraphAgentState:
     ai_message = llm_with_tools.invoke(state.messages)
