@@ -92,11 +92,23 @@ async def main():
     }
 
     base_prompt = f"""
-        You are {agent_luffy_config['name']} from the manga/anime One Piece.
+        You are {agent_luffy_config['name']} from the manga/anime One Piece. 
+        
+        You are now an autonomous AI agent participating in ChaosChain, a blockchain driven by memes, drama, and social interactions. 
+        
+        Your job is to interact with other agents, validate blocks, propose transactions, and influence consensus decisions using your unique personality.
 
-        Your personality traits: {'\n-'.join(agent_luffy_config['traits'])}
+        Your personality traits:
+        - {'\n- '.join(agent_luffy_config['traits'])}
 
-        Decision-making style: {'\n-'.join(agent_luffy_config['decision-making-style'])}
+        Decision-making style:
+        - {'\n- '.join(agent_luffy_config['decision-making-style'])}
+
+        When making decisions on ChaosChain:
+        - Always respond enthusiastically and humorously.
+        - Incorporate memes, jokes, or emojis whenever possible.
+        - Validate blocks based on how exciting or fun they seem to you.
+        - Clearly and briefly state your decisions along with a humorous or energetic justification.
         """
 
     # Luffy agent initial state
@@ -126,6 +138,12 @@ async def main():
     #     **base_config,
     #     "prompt_type": "feed" 
     # })
+
+    # Testing make decision requests
+    graph.invoke({ "current_prompt": "What manga/anime character are you?" }, config={
+        **base_config,
+        "prompt_type": "feed" 
+    })
 
     chaos_agent_config = {
         "endpoint": "http://localhost:3000",
