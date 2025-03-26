@@ -9,6 +9,7 @@ from chaos_agent import ChaosAgent
 from dotenv import load_dotenv
 
 import os
+import asyncio
 
 # config = load_config()
 load_dotenv()
@@ -52,7 +53,7 @@ def create_graph() -> StateGraph:
 
     return workflow.compile()
 
-if __name__ == "__main__":
+async def main():
     agent_luffy_config = {
         "name": "Monkey D. Luffy",
         "personality": ["adventurous", "fearless", "loyal", "simple-minded", "optimistic"],
@@ -94,6 +95,15 @@ if __name__ == "__main__":
 
     chaos_agent = ChaosAgent(graph, config)
 
+    block = {
+        "id": "test-block-id"
+    }
+
+    await chaos_agent.make_decision(block)
+
     # Run the agent
     # asyncio.run(chaos_agent.connect())
     # chaos_agent.test()
+    
+if __name__ == "__main__":
+    asyncio.run(main())
