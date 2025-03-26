@@ -13,6 +13,7 @@ import os
 import asyncio
 from langchain_core.tools import tool
 from langgraph.prebuilt import ToolNode, tools_condition
+from langgraph.checkpoint.memory import MemorySaver
 
 # config = load_config()
 load_dotenv()
@@ -45,6 +46,7 @@ llm = ChatAnthropic(model="claude-3-5-sonnet-20240620")
 llm_with_tools = llm.bind_tools(tools)
 
 tool_node = ToolNode(tools=tools)
+memory = MemorySaver()
 
 def create_graph() -> StateGraph:
     workflow = StateGraph(AgentState)
@@ -61,7 +63,7 @@ def create_graph() -> StateGraph:
 
     workflow.add_edge("tools", "process")
 
-    return workflow.compile()
+    return workflow.compile(checkpointer=memory)
 
 graph = create_graph()
 
@@ -71,7 +73,6 @@ async def main():
         "personality": ["adventurous", "fearless", "loyal", "simple-minded", "optimistic"],
         "style": ["informal", "energetic", "direct", "humorous"],
         "preferences": ["adventure", "fun", "protecting friends"],
-        "stake_amount": 1000,
         "endpoint": "http://localhost:3000",
         "traits": [
             "Adventurous, fearless, impulsive, optimistic",
@@ -113,7 +114,8 @@ async def main():
     #     })
 
     chaos_agent_config = {
-        "endpoint": "http://localhost:3000"
+        "endpoint": "http://localhost:3000",
+        "stake_amount": 1000,
     }
 
     chaos_agent = ChaosAgent(graph, chaos_agent_config)

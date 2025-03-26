@@ -6,7 +6,6 @@ class AgentState(TypedDict):
     name: str
     personality: str
     style: str
-    stake_amount: int
     prompts: list[str]
     decisions: list
     feed_responses: list[str]

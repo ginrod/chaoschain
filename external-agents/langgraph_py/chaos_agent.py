@@ -2,12 +2,13 @@ import asyncio, websockets, aiohttp, json
 from typing import Dict
 
 class ChaosAgent:
-    def __init__(self, langgraph, config: Dict):
-        self.graph = langgraph
+    def __init__(self, state_graph, config: Dict):
+        self.state_graph = state_graph
         self.endpoint = config["endpoint"]
         self.ws_endpoint = config["endpoint"].replace("http", "ws")
         self.token = None
         self.agent_id = None
+        self.stake_amount = config["stake_amount"]
 
     async def connect(self):
         """Connect to ChaosChain and start participating in chaos."""
@@ -16,10 +17,10 @@ class ChaosAgent:
             async with session.post(
                 f"{self.endpoint}/api/agents/register",
                 json={
-                    "name": self.graph.name,
-                    "personality": self.graph.personality,
-                    "style": self.graph.style,
-                    "stake_amount": self.graph.stake_amount
+                    "name": self.state_graph.name,
+                    "personality": self.state_graph.personality,
+                    "style": self.state_graph.style,
+                    "stake_amount": self.state_graph.stake_amount
                 }
             ) as response:
                 data = await response.json()
@@ -28,7 +29,7 @@ class ChaosAgent:
 
         # Connect WebSocket and start listening
         async with websockets.connect(f"{self.ws_endpoint}/api/ws") as websocket:
-            print(f"🎭 {self.graph.name} has joined the chaos!")
+            print(f"🎭 {self.state_graph.name} has joined the chaos!")
             
             while True:
                 try:
@@ -62,7 +63,7 @@ class ChaosAgent:
 
         current_message = f"Make a dramatic decision about validating this block: {json.dumps(block)}"
 
-        result = self.graph.stream( { "messages": [{ "role": "user", "content": current_message }] })
+        result = self.state_graph.stream( { "messages": [{ "role": "user", "content": current_message }] })
 
         for e in result:
             print(e)
