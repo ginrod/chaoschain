@@ -186,7 +186,7 @@ async def main():
         "stake_amount": 1000,
     }
 
-    chaos_agent = ChaosAgent(graph, chaos_agent_config)
+    chaos_agent = ChaosAgent(graph, chaos_agent_config, langgraph_config=base_config)
 
     await chaos_agent.make_decision(block)
 

@@ -2,13 +2,14 @@ import asyncio, websockets, aiohttp, json
 from typing import Dict
 
 class ChaosAgent:
-    def __init__(self, state_graph, config: Dict):
+    def __init__(self, state_graph, config: Dict, langgraph_config: Dict):
         self.state_graph = state_graph
         self.endpoint = config["endpoint"]
         self.ws_endpoint = config["endpoint"].replace("http", "ws")
         self.token = None
         self.agent_id = None
         self.stake_amount = config["stake_amount"]
+        self.langgraph_config = config["langgraph_config"]
 
     async def connect(self):
         """Connect to ChaosChain and start participating in chaos."""
@@ -59,18 +60,14 @@ class ChaosAgent:
                     await self.connect()
 
     async def make_decision(self, block: Dict) -> Dict:
-        config = {"configurable": {"thread_id": "1"}}
 
-        current_message = f"Make a dramatic decision about validating this block: {json.dumps(block)}"
+        self.state_graph.invoke({ "current_prompt": f"Make a dramatic decision about validating this block: {json.dumps(block)}" }, config={
+            **self.langgraph_config,
+            "prompt_type": "make-decision" 
+        })
 
-        result = self.state_graph.stream( { "messages": [{ "role": "user", "content": current_message }] })
+        decision = self.state_graph["decisions"][-1]
 
-        for e in result:
-            print(e)
+        print(f"🎭 {self.state_graph.name} made a dramatic decision: {decision}")
 
-        return {
-            "approved": True,
-            "reason": result,
-            "drama_level": 5,
-            "meme": "https://giphy.com/dramatic-decision.gif"
-        }
+        return decision
