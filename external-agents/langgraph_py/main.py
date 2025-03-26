@@ -1,9 +1,9 @@
 import asyncio, websockets, aiohttp, json, random
 from langchain_community.tools.tavily_search import TavilySearchResults
 from langchain_anthropic import ChatAnthropic
-from langgraph_agent import LangGraphAgentState
 from langgraph.graph import StateGraph
 from langgraph.types import Command, interrupt
+from agent_state import AgentState
 
 from config import AgentConfig, load_config
 from chaos_agent import ChaosAgent
@@ -25,17 +25,17 @@ TAVILY_API_KEY = os.getenv("TAVILY_API_KEY")
 
 os.environ["TAVILY_API_KEY"] = TAVILY_API_KEY
 
-def process(state: LangGraphAgentState) -> LangGraphAgentState:
-    ai_message = llm_with_tools.invoke(state["messages"])
+def process(state: AgentState, config) -> AgentState:
+    ai_message = llm_with_tools.invoke(state["prompts"])
 
-    if state["prompt_type"] == "feed":
-        state["feed_messages"].append(ai_message.content)
-    elif state["prompt_type"] == "make-decision":
+    config_params = config.get("configurable", {})
+
+    if config_params["prompt_type"] == "feed":
+        state["feed_responses"].append(ai_message.content)
+    elif config_params["prompt_type"] == "make-decision":
         state["request_messages"].append(ai_message.content)
     else:
         raise ValueError("Invalid prompt type")
-
-    state["messages"].append(ai_message.content)
 
     return state
 
@@ -47,7 +47,7 @@ llm_with_tools = llm.bind_tools(tools)
 tool_node = ToolNode(tools=tools)
 
 def create_graph() -> StateGraph:
-    workflow = StateGraph(LangGraphAgentState)
+    workflow = StateGraph(AgentState)
 
     workflow.add_node("process", process)
     workflow.add_node("tools", tool_node)
@@ -97,18 +97,26 @@ async def main():
     # Luffy agent initial state
     initial_state = {
         **agent_luffy_config,
-        base_prompt: base_prompt
+        "prompts": [base_prompt],
+        "feed_responses": [],
     }
 
     graph = create_graph()
 
-    graph.invoke({ "messages": [{ "role": "user", "content": base_prompt }] , "prompt_type": "feed" })
+    graph.invoke(initial_state, config={ "prompt_type": "feed" })
 
-    config = {
+    # graph.invoke({ 
+    #     "messages":
+    #         [{ "role": "user", "content": base_prompt }]},
+    #     config={
+    #         "prompt_type": "feed"
+    #     })
+
+    chaos_agent_config = {
         "endpoint": "http://localhost:3000"
     }
 
-    chaos_agent = ChaosAgent(graph, config)
+    chaos_agent = ChaosAgent(graph, chaos_agent_config)
 
     block = {
         "id": "test-block-id"

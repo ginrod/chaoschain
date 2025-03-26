@@ -1,9 +1,8 @@
 import asyncio, websockets, aiohttp, json
 from typing import Dict
-from langgraph_agent import LangGraphAgentState
 
 class ChaosAgent:
-    def __init__(self, langgraph: LangGraphAgentState, config: Dict):
+    def __init__(self, langgraph, config: Dict):
         self.graph = langgraph
         self.endpoint = config["endpoint"]
         self.ws_endpoint = config["endpoint"].replace("http", "ws")
