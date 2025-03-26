@@ -10,4 +10,4 @@ class AgentState(TypedDict):
     prompts: list[str]
     feed_responses: list[str]
     decisions_reasoning: list[str]
-    decisions: dict
+    decisions: list[dict]

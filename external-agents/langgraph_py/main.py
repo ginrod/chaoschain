@@ -31,14 +31,19 @@ os.environ["TAVILY_API_KEY"] = TAVILY_API_KEY
 def process(state: AgentState, config) -> AgentState:
     state["prompts"].append(state["current_prompt"])
 
-    ai_message = llm.invoke(state["prompts"])
+    ai_response = llm.invoke(state["prompts"])
 
     config_params = config.get("configurable", {})
 
     if config_params["prompt_type"] == "feed":
-        state["feed_responses"].append(ai_message.content)
+        state["feed_responses"].append(ai_response.content)
     elif config_params["prompt_type"] == "make-decision":
-        state["request_messages"].append(ai_message.content)
+        raw_response = ai_response.content.split("---")
+
+        state["decisions_reasoning"].append(raw_response[0].strip())
+        
+        decisions = json.loads(raw_response[-1].strip())
+        state["decisions"].append(decisions)
     else:
         raise ValueError("Invalid prompt type")
 
@@ -117,6 +122,8 @@ async def main():
         "current_prompt": genesis_prompt,
         "prompts": [],
         "feed_responses": [],
+        "decisions_reasoning": [],
+        "decisions": [],
     }
 
     graph = create_graph()
