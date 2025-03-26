@@ -1,6 +1,6 @@
 import asyncio, websockets, aiohttp, json
 from typing import Dict
-from langgraph_py.langgraph_agent import LangGraphAgentState
+from langgraph_agent import LangGraphAgentState
 
 class ChaosAgent:
     def __init__(self, langgraph: LangGraphAgentState, config: Dict):
@@ -62,7 +62,6 @@ class ChaosAgent:
         config = {"configurable": {"thread_id": "1"}}
 
         current_message = f"Make a dramatic decision about validating this block: {json.dumps(block)}"
-
 
         result = self.graph.stream( { "messages": [{ "role": "user", "content": current_message }] })
 

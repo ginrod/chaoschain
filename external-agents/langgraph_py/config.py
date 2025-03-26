@@ -7,13 +7,13 @@ class AgentConfig(BaseModel):
     """Configuration for the agent system."""
     
     # Required API Keys
-    openai_api_key: str = Field(..., min_length=20)
+    # openai_api_key: str = Field(..., min_length=20)
     # langsmith_api_key: str = Field(..., min_length=20)
     
     # Optional API Keys
     anthropic_api_key: Optional[str] = Field(None, min_length=20)
     tavily_api_key: Optional[str] = Field(None, min_length=20)
-    
+
     # Rate Limiting
     max_requests_per_minute: int = Field(default=60, ge=1, le=1000)
     max_tokens_per_request: int = Field(default=4000, ge=1, le=8000)
@@ -23,17 +23,17 @@ class AgentConfig(BaseModel):
     model_name: str = Field(default="gpt-3.5-turbo")
     temperature: float = Field(default=0.7, ge=0, le=2.0)
     
-    @validator("openai_api_key")
-    def validate_openai_key(cls, v):
-        if not v.startswith(("sk-")):
-            raise ValueError("Invalid OpenAI API key format")
-        return v
+    # @validator("openai_api_key")
+    # def validate_openai_key(cls, v):
+    #     if not v.startswith(("sk-")):
+    #         raise ValueError("Invalid OpenAI API key format")
+    #     return v
     
-    @validator("langsmith_api_key")
-    def validate_langsmith_key(cls, v):
-        if not v.startswith(("lsv2_")):
-            raise ValueError("Invalid LangSmith API key format")
-        return v
+    # @validator("langsmith_api_key")
+    # def validate_langsmith_key(cls, v):
+    #     if not v.startswith(("lsv2_")):
+    #         raise ValueError("Invalid LangSmith API key format")
+    #     return v
     
     @validator("anthropic_api_key")
     def validate_anthropic_key(cls, v):
@@ -47,18 +47,19 @@ class AgentConfig(BaseModel):
             raise ValueError("Invalid Tavily API key format")
         return v
 
-def load_config() -> AgentConfig:
+def load_config():
     """Load and validate configuration from environment variables."""
     load_dotenv()
     
     config_dict = {
-        "OPENAI_API_KEY": os.getenv("OPENAI_API_KEY"),
+        # "OPENAI_API_KEY": os.getenv("OPENAI_API_KEY"),
         # "langsmith_api_key": os.getenv("LANGSMITH_API_KEY"),
         "ANTHROPIC_API_KEY": os.getenv("ANTHROPIC_API_KEY"),
         "TAVILY_API_KEY": os.getenv("TAVILY_API_KEY"),
     }
     
     try:
-        return AgentConfig(**config_dict)
+        # return AgentConfig(**config_dict)
+        return config_dict
     except Exception as e:
         raise ValueError(f"Configuration error: {str(e)}")

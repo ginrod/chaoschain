@@ -5,17 +5,19 @@ from langgraph_agent import LangGraphAgentState
 from langgraph.graph import StateGraph
 
 from config import AgentConfig, load_config
-from ..chaos_agent import ChaosAgent
+from chaos_agent import ChaosAgent
+from dotenv import load_dotenv
 
 import os
 
-config = load_config()
+# config = load_config()
+load_dotenv()
 
-ANTHROPIC_API_KEY = config["ANTHROPIC_API_KEY"]
+ANTHROPIC_API_KEY = os.getenv("ANTHROPIC_API_KEY")
 
 os.environ["ANTHROPIC_API_KEY"] = ANTHROPIC_API_KEY
 
-TAVILY_API_KEY = config["TAVILY_API_KEY"]
+TAVILY_API_KEY = os.getenv("TAVILY_API_KEY")
 
 os.environ["TAVILY_API_KEY"] = TAVILY_API_KEY
 
@@ -41,7 +43,7 @@ llm = ChatAnthropic(model="claude-3-5-sonnet-20240620")
 llm_with_tools = llm.bind_tools(tools)
 
 def create_graph() -> StateGraph:
-    workflow = StateGraph()
+    workflow = StateGraph(LangGraphAgentState)
 
     workflow.add_node("make_decision", make_decision)
 
@@ -72,11 +74,11 @@ if __name__ == "__main__":
     }
 
     base_prompt = f"""
-        You are {agent_luffy_config.name} from the manga/anime One Piece.
+        You are {agent_luffy_config['name']} from the manga/anime One Piece.
 
-        Your personality traits: {'\n-'.join(agent_luffy_config["traits"])}
+        Your personality traits: {'\n-'.join(agent_luffy_config['traits'])}
 
-        Decision-making style: {'\n-'.join(agent_luffy_config["decision-making-style"])}
+        Decision-making style: {'\n-'.join(agent_luffy_config['decision-making-style'])}
         """
 
     luffy = LangGraphAgentState({
@@ -86,9 +88,11 @@ if __name__ == "__main__":
 
     graph = create_graph()
 
-    chaos_agent = ChaosAgent(luffy, graph)
+    config = {
+        "endpoint": "http://localhost:3000"
+    }
 
-    
+    chaos_agent = ChaosAgent(graph, config)
 
     # Run the agent
     # asyncio.run(chaos_agent.connect())
