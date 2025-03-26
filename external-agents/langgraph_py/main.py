@@ -12,6 +12,7 @@ from dotenv import load_dotenv
 import os
 import asyncio
 from langchain_core.tools import tool
+from langgraph.prebuilt import ToolNode, tools_condition
 
 # config = load_config()
 load_dotenv()
@@ -42,15 +43,27 @@ tools = [tool, human_assistance]
 llm = ChatAnthropic(model="claude-3-5-sonnet-20240620")
 llm_with_tools = llm.bind_tools(tools)
 
+tool_node = ToolNode(tools=tools)
+
 def create_graph() -> StateGraph:
     workflow = StateGraph(LangGraphAgentState)
 
     workflow.add_node("make_decision", make_decision)
+    workflow.add_node("tools", tool_node)
 
     workflow.set_entry_point("make_decision")
-    workflow.set_finish_point("make_decision")
+    workflow.set_entry_point("tools")
+
+    workflow.add_conditional_edges(
+        "make_decision",
+        tools_condition
+    )
+
+    workflow.add_edge("tools", "make_decision")
 
     return workflow.compile()
+
+graph = create_graph()
 
 async def main():
     agent_luffy_config = {
