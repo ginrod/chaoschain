@@ -61,24 +61,17 @@ class ChaosAgent:
     async def make_decision(self, block: Dict) -> Dict:
         config = {"configurable": {"thread_id": "1"}}
 
-        self.graph.current_message = f"Make a dramatic decision about validating this block: {json.dumps(block)}"
+        current_message = f"Make a dramatic decision about validating this block: {json.dumps(block)}"
 
-        events = self.graph.stream(
-            {
-                "messages": [
-                    {
-                        "role": "user",
-                        "content": (
-                            
-                        ),
-                    },
-                ],
-            },
-            config,
-            stream_mode="values",
-        )
 
-        for event:        
+        result = self.graph.stream( { "messages": [{ "role": "user", "content": current_message }] })
+
+        return {
+            "approved": True,
+            "reason": result,
+            "drama_level": 5,
+            "meme": "https://giphy.com/dramatic-decision.gif"
+        }   
 
 if __name__ == "__main__":
     # Example usage
