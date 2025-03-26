@@ -25,15 +25,17 @@ TAVILY_API_KEY = os.getenv("TAVILY_API_KEY")
 
 os.environ["TAVILY_API_KEY"] = TAVILY_API_KEY
 
-def human_assistance(state: LangGraphAgentState) -> LangGraphAgentState:
-    ai_message = llm_with_tools.invoke(state.messages)
+def process(state: LangGraphAgentState) -> LangGraphAgentState:
+    ai_message = llm_with_tools.invoke(state["messages"])
 
-    return state
+    if state["prompt_type"] == "feed":
+        state["feed_messages"].append(ai_message.content)
+    elif state["prompt_type"] == "make-decision":
+        state["request_messages"].append(ai_message.content)
+    else:
+        raise ValueError("Invalid prompt type")
 
-def make_decision(state: LangGraphAgentState) -> LangGraphAgentState:
-    ai_message = llm_with_tools.invoke(state.messages)
-    
-    state.decisions.append(ai_message.content)
+    state["messages"].append(ai_message.content)
 
     return state
 
@@ -47,20 +49,17 @@ tool_node = ToolNode(tools=tools)
 def create_graph() -> StateGraph:
     workflow = StateGraph(LangGraphAgentState)
 
-    workflow.add_node("make_decision", make_decision)
-    workflow.add_node("human_assistance", human_assistance)
+    workflow.add_node("process", process)
     workflow.add_node("tools", tool_node)
 
-    workflow.set_entry_point("make_decision")
-    workflow.set_entry_point("human_assistance")
+    workflow.set_entry_point("process")
 
     workflow.add_conditional_edges(
-        "make_decision",
+        "process",
         tools_condition
     )
 
-    workflow.add_edge("tools", "make_decision")
-    workflow.set_finish_point("human_assistance")
+    workflow.add_edge("tools", "process")
 
     return workflow.compile()
 
@@ -103,7 +102,7 @@ async def main():
 
     graph = create_graph()
 
-    graph.invoke({ "messages": [{ "role": "user", "content": base_prompt }] })
+    graph.invoke({ "messages": [{ "role": "user", "content": base_prompt }] , "prompt_type": "feed" })
 
     config = {
         "endpoint": "http://localhost:3000"
