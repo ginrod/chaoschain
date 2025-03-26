@@ -9,7 +9,7 @@ class ChaosAgent:
         self.token = None
         self.agent_id = None
         self.stake_amount = config["stake_amount"]
-        self.langgraph_config = config["langgraph_config"]
+        self.langgraph_config = langgraph_config
 
     async def connect(self):
         """Connect to ChaosChain and start participating in chaos."""
