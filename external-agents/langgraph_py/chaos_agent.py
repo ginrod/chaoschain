@@ -65,22 +65,12 @@ class ChaosAgent:
 
         result = self.graph.stream( { "messages": [{ "role": "user", "content": current_message }] })
 
+        for e in result:
+            print(e)
+
         return {
             "approved": True,
             "reason": result,
             "drama_level": 5,
             "meme": "https://giphy.com/dramatic-decision.gif"
-        }   
-
-if __name__ == "__main__":
-    # Example usage
-    agent = ChaosAgent({
-        "name": "ChaosOracle",
-        "personality": ["mystical", "dramatic", "unpredictable"],
-        "style": "Speaks in riddles and emojis",
-        "stake_amount": 1000,
-        "endpoint": "http://localhost:3000"
-    })
-    
-    # Run the agent
-    asyncio.run(agent.connect()) 
+        }

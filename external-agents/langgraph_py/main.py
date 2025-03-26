@@ -3,6 +3,7 @@ from langchain_community.tools.tavily_search import TavilySearchResults
 from langchain_anthropic import ChatAnthropic
 from langgraph_agent import LangGraphAgentState
 from langgraph.graph import StateGraph
+from langgraph.types import Command, interrupt
 
 from config import AgentConfig, load_config
 from chaos_agent import ChaosAgent
@@ -10,6 +11,7 @@ from dotenv import load_dotenv
 
 import os
 import asyncio
+from langchain_core.tools import tool
 
 # config = load_config()
 load_dotenv()
@@ -22,16 +24,13 @@ TAVILY_API_KEY = os.getenv("TAVILY_API_KEY")
 
 os.environ["TAVILY_API_KEY"] = TAVILY_API_KEY
 
-tool = TavilySearchResults(max_results=2)
-tools = [tool]
-llm = ChatAnthropic(model="claude-3-5-sonnet-20240620")
-llm_with_tools = llm.bind_tools(tools)
+@tool
+def human_assistance(query: str) -> str:
+    """Request assistance from a human."""
+    human_response = interrupt({"query": query})
+    return human_response["data"]
 
 def make_decision(state: LangGraphAgentState) -> LangGraphAgentState:
-    if not state.prompt_seeded:
-        llm_with_tools.invoke(state.base_prompt)
-        state.prompt_seeded = True
-
     ai_message = llm_with_tools.invoke(state.messages)
     
     state.decisions.append(ai_message.content)
@@ -39,7 +38,7 @@ def make_decision(state: LangGraphAgentState) -> LangGraphAgentState:
     return state
 
 tool = TavilySearchResults(max_results=2)
-tools = [tool]
+tools = [tool, human_assistance]
 llm = ChatAnthropic(model="claude-3-5-sonnet-20240620")
 llm_with_tools = llm.bind_tools(tools)
 
@@ -82,12 +81,15 @@ async def main():
         Decision-making style: {'\n-'.join(agent_luffy_config['decision-making-style'])}
         """
 
-    luffy = LangGraphAgentState({
+    # Luffy agent initial state
+    initial_state = {
         **agent_luffy_config,
         base_prompt: base_prompt
-    })
+    }
 
     graph = create_graph()
+
+    graph.invoke({ "messages": [{ "role": "user", "content": base_prompt }] })
 
     config = {
         "endpoint": "http://localhost:3000"
@@ -104,6 +106,6 @@ async def main():
     # Run the agent
     # asyncio.run(chaos_agent.connect())
     # chaos_agent.test()
-    
+
 if __name__ == "__main__":
     asyncio.run(main())
