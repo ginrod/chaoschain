@@ -8,5 +8,6 @@ class AgentState(TypedDict):
     style: str
     current_prompt: str
     prompts: list[str]
-    decisions: list
     feed_responses: list[str]
+    decisions_reasoning: list[str]
+    decisions: dict

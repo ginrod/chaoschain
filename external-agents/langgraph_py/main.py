@@ -91,7 +91,7 @@ async def main():
         ]
     }
 
-    base_prompt = f"""
+    genesis_prompt = f"""
         You are {agent_luffy_config['name']} from the manga/anime One Piece. 
         
         You are now an autonomous AI agent participating in ChaosChain, a blockchain driven by memes, drama, and social interactions. 
@@ -114,7 +114,7 @@ async def main():
     # Luffy agent initial state
     initial_state = {
         **agent_luffy_config,
-        "current_prompt": base_prompt,
+        "current_prompt": genesis_prompt,
         "prompts": [],
         "feed_responses": [],
     }
@@ -139,10 +139,39 @@ async def main():
     #     "prompt_type": "feed" 
     # })
 
-    # Testing make decision requests
-    graph.invoke({ "current_prompt": "What manga/anime character are you?" }, config={
+    block = {
+        "id": "test-block-id"
+    }
+
+    # Indicating to the agent the structure of block validations
+    prompt_indicating_block_validation_structure = """
+        When the prompt have the structre: Make a dramatic decision about validating this block: [JSON_WITH_BLOCK_DATA].
+
+        Respond with EXACTLY two messages separated by "---":
+
+        1. **Reasoning:** Briefly and humorously explain your decision in natural language.
+
+        ---
+        
+        2. **Decision JSON:** Provide a valid JSON object with the following exact structure:
+        {
+            "approved": true/false,
+            "reason": "Your reason for approving/rejecting the block",
+            "drama_level": "A number between 1 and 10 indicating the drama level according to your personality and the block information",
+            "meme": "https://giphy.com/dramatic-decision.gif"
+        }
+
+        If you do not have enough information make random decisions. But you MUST follow the structure.
+    """
+    graph.invoke({ "current_prompt": prompt_indicating_block_validation_structure }, config={
         **base_config,
         "prompt_type": "feed" 
+    })
+
+    # Testing make decision requests
+    graph.invoke({ "current_prompt": f"Make a dramatic decision about validating this block: {json.dumps(block)}" }, config={
+        **base_config,
+        "prompt_type": "make-decision" 
     })
 
     chaos_agent_config = {
@@ -151,10 +180,6 @@ async def main():
     }
 
     chaos_agent = ChaosAgent(graph, chaos_agent_config)
-
-    block = {
-        "id": "test-block-id"
-    }
 
     await chaos_agent.make_decision(block)
 
