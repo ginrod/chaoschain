@@ -25,7 +25,6 @@ TAVILY_API_KEY = os.getenv("TAVILY_API_KEY")
 
 os.environ["TAVILY_API_KEY"] = TAVILY_API_KEY
 
-@tool
 def human_assistance(query: str) -> str:
     """Request assistance from a human."""
     human_response = interrupt({"query": query})
@@ -39,7 +38,7 @@ def make_decision(state: LangGraphAgentState) -> LangGraphAgentState:
     return state
 
 tool = TavilySearchResults(max_results=2)
-tools = [tool, human_assistance]
+tools = [tool]
 llm = ChatAnthropic(model="claude-3-5-sonnet-20240620")
 llm_with_tools = llm.bind_tools(tools)
 
@@ -49,10 +48,11 @@ def create_graph() -> StateGraph:
     workflow = StateGraph(LangGraphAgentState)
 
     workflow.add_node("make_decision", make_decision)
+    workflow.add_node("human_assistance", human_assistance)
     workflow.add_node("tools", tool_node)
 
     workflow.set_entry_point("make_decision")
-    workflow.set_entry_point("tools")
+    workflow.set_entry_point("human_assistance")
 
     workflow.add_conditional_edges(
         "make_decision",
@@ -60,6 +60,7 @@ def create_graph() -> StateGraph:
     )
 
     workflow.add_edge("tools", "make_decision")
+    workflow.set_finish_point("human_assistance")
 
     return workflow.compile()
 
