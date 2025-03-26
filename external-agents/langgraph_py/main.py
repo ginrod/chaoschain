@@ -15,6 +15,8 @@ from langchain_core.tools import tool
 from langgraph.prebuilt import ToolNode, tools_condition
 from langgraph.checkpoint.memory import MemorySaver
 
+from uuid import uuid4
+
 # config = load_config()
 load_dotenv()
 
@@ -56,10 +58,10 @@ def create_graph() -> StateGraph:
 
     workflow.set_entry_point("process")
 
-    workflow.add_conditional_edges(
-        "process",
-        tools_condition
-    )
+    # workflow.add_conditional_edges(
+    #     "process",
+    #     tools_condition
+    # )
 
     workflow.add_edge("tools", "process")
 
@@ -104,12 +106,23 @@ async def main():
 
     graph = create_graph()
 
-    graph.invoke(initial_state, config={ "prompt_type": "feed" })
+    thread_id = str(uuid4())
+
+    # TODO: Replace for a SQL database or other external system
+    print(f"Generating thread_id: {thread_id} used in memory saver")
+
+    base_config = { "configurable": { "thread_id": thread_id } }
+
+    graph.invoke(initial_state, config={
+        **base_config, 
+        "prompt_type": "feed" 
+    })
 
     # graph.invoke({ 
     #     "messages":
     #         [{ "role": "user", "content": base_prompt }]},
     #     config={
+    #         **base_config, 
     #         "prompt_type": "feed"
     #     })
 
