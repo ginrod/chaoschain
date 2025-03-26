@@ -61,12 +61,12 @@ class ChaosAgent:
 
     async def make_decision(self, block: Dict) -> Dict:
 
-        self.state_graph.invoke({ "current_prompt": f"Make a dramatic decision about validating this block: {json.dumps(block)}" }, config={
+        updated_state = self.state_graph.invoke({ "current_prompt": f"Make a dramatic decision about validating this block: {json.dumps(block)}" }, config={
             **self.langgraph_config,
             "prompt_type": "make-decision" 
         })
 
-        decision = self.state_graph["decisions"][-1]
+        decision = updated_state["decisions"][-1]
 
         print(f"🎭 {self.state_graph.name} made a dramatic decision: {decision}")
 
